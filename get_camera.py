@@ -1,5 +1,6 @@
 import time
 import cv2
+from emailings import  send_email
 
 # 这个地方打开摄像头 如果 数字 0 不行🙅 用 1试试
 video = cv2.VideoCapture(1)
@@ -10,8 +11,10 @@ if not video.isOpened():
     exit()
 
 first_frame = None
+status_list = []
 
 while True:
+    status = 0
     check, frame = video.read()
     if not check:
         print("未能读取帧")
@@ -36,8 +39,17 @@ while True:
         if cv2.contourArea(contour) < 10000:
             continue
         x, y, w, h = cv2.boundingRect(contour)
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 3)
+        rectangle = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 3)
+        if rectangle.any():
+            status = 1
+    status_list.append(status)
+    status_list = status_list[-2:] # 取最后2个
 
+    # 这个时候 就是物体离开🏃的时候
+    if status_list[0] == 1 and status_list[1] == 0:
+        send_email('xxx')
+
+    print(status_list)
     cv2.imshow('Video', frame)
 
     key = cv2.waitKey(1)
