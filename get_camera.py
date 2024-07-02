@@ -3,13 +3,14 @@ import glob
 import time
 import cv2
 from emailings import  send_email
+from threading import  Thread
 
 # 创建 images 文件夹，如果不存在
 if not os.path.exists('images'):
     os.makedirs('images')
 
 # 这个地方打开摄像头 如果 数字 0 不行🙅 用 1试试
-video = cv2.VideoCapture(1)
+video = cv2.VideoCapture(0)
 time.sleep(1)
 
 if not video.isOpened():
@@ -70,8 +71,19 @@ while True:
 
     # 这个时候 就是物体离开🏃的时候
     if status_list[0] == 1 and status_list[1] == 0:
-        send_email(images_with_object)
-        clean_folder()
+        # 引入线程的目的是 让 发送邮件和清理🧹文件夹分开 在后台运行 而不会导致 视频关键帧 卡顿
+        email_thread = Thread(target=send_email, args=(images_with_object,))
+        email_thread.daemon = True
+
+        clean_thread = Thread(target=clean_folder,)
+        email_thread.daemon = True
+
+        email_thread.start()
+
+        # 清理文件线程需要放在结束， 因为发送邮件会有延迟比这个操作慢， 放在前面会导致 无法拿到图片
+        clean_thread.start()
+        # send_email(images_with_object)
+        # clean_folder()
 
     cv2.imshow('Video', frame)
 
