@@ -20,8 +20,16 @@ first_frame = None
 status_list = []
 count = 1
 
+
+# 发送完 邮件后 清除 images 下的图片
+def clean_folder():
+    images = glob.glob('images/*.png')
+    for image in images:
+        os.remove(image)
+
 while True:
     status = 0
+    images_with_object = ''
     check, frame = video.read()
     if not check:
         print("未能读取帧")
@@ -62,7 +70,8 @@ while True:
 
     # 这个时候 就是物体离开🏃的时候
     if status_list[0] == 1 and status_list[1] == 0:
-        send_email()
+        send_email(images_with_object)
+        clean_folder()
 
     cv2.imshow('Video', frame)
 
